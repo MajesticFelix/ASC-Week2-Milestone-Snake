@@ -1,4 +1,4 @@
-let appleImg, playImg, pauseImg, restartImg;
+let appleImg, playImg, pauseImg, restartImg, gameOverImg;
 let score = 0;
 let pause = true;
 let appleX = 425, appleY = 325;
@@ -7,31 +7,43 @@ let snakeX = [], snakeY = [];
 let numSegments = 20;
 let speed = 5;
 let direction = "right";
+let backgroundMusic, appleBite, bump; 
 
 function preload(){
+    //Load images
     appleImg = loadImage("images/apple.png");
     playImg = loadImage("images/play.png");
     pauseImg = loadImage("images/pause.png");
     restartImg = loadImage("images/restart.png");
+    gameOverImg = loadImage("images/gameOver.png");
+
+    //Load sounds
+    backgroundMusic = loadSound("sounds/The Legend of Ninetales - Pokémon Mystery Dungeon Rescue Team DX.mp3");
+    appleBite = loadSound("sounds/appleBite.mp3");
+    bump = loadSound("sounds/bump.mp3");
 }
 
 function setup(){
     createCanvas(600,700);
-    background(255,255,255);
+    background(255);
 
     //Load Pause, Running, and Restart Buttons
+    backgroundMusic.play();
     imageMode(CENTER);
     image(playImg, 525, 675, 50, 50);
     image(restartImg, 575, 675, 50, 50);
 
     for (let i = 0; i < numSegments; i++) {
-        snakeX.push(startingX + i * speed);
+        snakeX.push(startingX + i + speed);
         snakeY.push(startingY);
     }
 }
 
 function draw(){
-    setupGrid();
+    //setupGrid();
+    noStroke();
+    fill(0);
+    rect(0,0,600,650);
 
     //Score Tracker
     image(appleImg, 25, 675, 50, 50);
@@ -46,7 +58,6 @@ function draw(){
     for (let i = 0; i < numSegments - 1; i++) {
         stroke(71,117,233);
         strokeWeight(30);
-        //line(Math.round(snakeX[i]/25)*25, Math.round(snakeY[i]/25)*25, Math.round(snakeX[i + 1]/25)*25, Math.round(snakeY[i + 1]/25)*25);
         line(snakeX[i], snakeY[i], snakeX[i + 1], snakeY[i + 1]);
     }
     updateSnake();
@@ -58,6 +69,9 @@ function draw(){
 function checkStatus(){
     //Snake head collision checker
     if(snakeX[snakeX.length-1] > 600 || snakeX[snakeX.length-1] < 0 || snakeY[snakeY.length-1] > 650 || snakeY[snakeY.length-1] < 0 || checkHeadCollision()){
+        image(gameOverImg, 300, 300, 500, 500);
+        backgroundMusic.stop();
+        bump.play();        
         noLoop();
         noStroke();
         textSize(50);
@@ -86,6 +100,7 @@ function checkApple(){
     appleTop = appleY - 25;
     appleBottom = appleY + 25;
     if(snakeLeft <= appleRight && snakeRight >= appleLeft && snakeTop <= appleBottom && snakeBottom >= appleTop){
+        appleBite.play();
         //Make the Snake longer
         for(let i = 0; i < 10; i++){
             snakeX.unshift(snakeX[0]);
@@ -102,29 +117,27 @@ function updateApple(){
     appleY = Math.round(random(0,575)/50)*50+25;
 }
 
-function setupGrid(){
-    //13 rows by 12 columns
-    //Tiles are 50x50
-    let xPos = 0;
-    let yPos = 0;
-    let switchColors = false;
-    //12 columns
-    noStroke();
-    for(let c = 0; c < 12; c++){
-        //13 rows
-        for(let r = 0; r < 13; r++){
-            if(switchColors){
-                fill(162,209,73); //Light green
-                switchColors = false;
-            }else{
-                fill(64,145,13); //Dark green
-                switchColors = true;
-            }
-            rect(xPos, yPos, 50, 50);
-            yPos += 50;
-        }
-        yPos = 0;
-        xPos += 50;
+function updateSnake(){
+    for (let i = 0; i < numSegments - 1; i++) {
+        snakeX[i] = snakeX[i + 1];
+        snakeY[i] = snakeY[i + 1];
+    }
+    if(direction == "left"){
+        snakeX[numSegments-1] = snakeX[numSegments-2] - speed;
+        snakeY[numSegments-1] = snakeY[numSegments-2];
+        console.log('left',numSegments);
+    }else if(direction == "right"){
+        snakeX[numSegments-1] = snakeX[numSegments-2] + speed;
+        snakeY[numSegments-1] = snakeY[numSegments-2];
+        console.log('right',numSegments);
+    }else if(direction == "up"){
+        snakeX[numSegments-1] = snakeX[numSegments-2];
+        snakeY[numSegments-1] = snakeY[numSegments-2] - speed;
+        console.log('up',numSegments);
+    }else if(direction == "down"){
+        snakeX[numSegments-1] = snakeX[numSegments-2];
+        snakeY[numSegments-1] = snakeY[numSegments-2] + speed;
+        console.log('down',numSegments);
     }
 }
 
@@ -179,10 +192,12 @@ function pressedPlayOrPauseButtons(){
     rect(500, 650, 50, 50);
     if(pause){
         image(pauseImg, 525, 675, 50, 50);
+        backgroundMusic.stop();
         frameRate(0);
         pause = false;
     }else{
         image(playImg, 525, 675, 50, 50);
+        backgroundMusic.play();
         frameRate(60);
         pause = true;
     }
@@ -190,6 +205,7 @@ function pressedPlayOrPauseButtons(){
 
 function pressedRestart(){
     frameRate(60);
+    backgroundMusic.stop();
     noStroke();
     fill(255,255,255);
     rect(60, 650, 50, 50);
@@ -207,26 +223,3 @@ function pressedRestart(){
     loop();
 }
 
-function updateSnake(){
-    for (let i = 0; i < numSegments - 1; i++) {
-        snakeX[i] = snakeX[i + 1];
-        snakeY[i] = snakeY[i + 1];
-    }
-    if(direction == "left"){
-        snakeX[numSegments-1] = snakeX[numSegments-2] - speed;
-        snakeY[numSegments-1] = snakeY[numSegments-2];
-        console.log('left',numSegments);
-    }else if(direction == "right"){
-        snakeX[numSegments-1] = snakeX[numSegments-2] + speed;
-        snakeY[numSegments-1] = snakeY[numSegments-2];
-        console.log('right',numSegments);
-    }else if(direction == "up"){
-        snakeX[numSegments-1] = snakeX[numSegments-2];
-        snakeY[numSegments-1] = snakeY[numSegments-2] - speed;
-        console.log('up',numSegments);
-    }else if(direction == "down"){
-        snakeX[numSegments-1] = snakeX[numSegments-2];
-        snakeY[numSegments-1] = snakeY[numSegments-2] + speed;
-        console.log('down',numSegments);
-    }
-}
