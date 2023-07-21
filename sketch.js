@@ -2,10 +2,10 @@ let appleImg, playImg, pauseImg, restartImg;
 let score = 0;
 let pause = true;
 let appleX = 425, appleY = 325;
-let startingX = 200, startingY = 330;
+let startingX = 200, startingY = 325;
 let snakeX = [], snakeY = [];
-let numSegments = 40;
-let speed = 3;
+let numSegments = 20;
+let speed = 5;
 let direction = "right";
 
 function preload(){
@@ -39,7 +39,7 @@ function draw(){
     fill(255,255,255);
     rect(60, 650, 50, 50);
     noStroke();
-    textSize(50);
+    textSize(40);
     fill(0,0,0);
     text(score, 60, 695);
 
@@ -75,21 +75,23 @@ function checkHeadCollision(){
 }
 
 function checkApple(){
+    //Checks for collision with the apple
     image(appleImg, appleX, appleY, 50, 50);
-    snakeLeft = snakeX[snakeX.length-1] ;
-    snakeRight = snakeX[snakeX.length-1] ;
-    snakeTop = snakeY[snakeY.length-1] ;
-    snakeBottom = snakeY[snakeY.length-1] ;
+    snakeLeft = snakeX[snakeX.length-1] - 3;
+    snakeRight = snakeX[snakeX.length-1] + 3;
+    snakeTop = snakeY[snakeY.length-1] - 3;
+    snakeBottom = snakeY[snakeY.length-1] + 3;
     appleLeft = appleX - 25;
     appleRight = appleX + 25;
     appleTop = appleY - 25;
     appleBottom = appleY + 25;
     if(snakeLeft <= appleRight && snakeRight >= appleLeft && snakeTop <= appleBottom && snakeBottom >= appleTop){
-        for(let i = 0; i < 15; i++){
+        //Make the Snake longer
+        for(let i = 0; i < 10; i++){
             snakeX.unshift(snakeX[0]);
             snakeY.unshift(snakeY[0]);
         }
-        numSegments += 15;
+        numSegments += 10;
         score++;
         updateApple();
     }
@@ -138,17 +140,25 @@ function keyPressed(){
     }
 
     //Snake move mechanics
-    if (keyCode === LEFT_ARROW || keyCode === 65) {
-        direction = "left";
+    if (keyCode == LEFT_ARROW || keyCode == 65) {
+        if (direction !== "right") { // Prevent turning back right
+            direction = "left";
+        }
     }
-    if (keyCode === RIGHT_ARROW || keyCode === 68) {
-        direction = "right";
+    if (keyCode == RIGHT_ARROW || keyCode == 68) {
+        if (direction != "left") { // Prevent turning back left
+            direction = "right";
+        }
     }
-    if (keyCode === UP_ARROW || keyCode === 87) {
-        direction = "up";
+    if (keyCode == UP_ARROW || keyCode == 87) {
+        if (direction != "down") { // Prevent turning back down
+            direction = "up";
+        }
     }
-    if (keyCode === DOWN_ARROW || keyCode === 83) {
-        direction = "down";
+    if (keyCode == DOWN_ARROW || keyCode == 83) {
+        if (direction != "up") { // Prevent turning back up
+            direction = "down";
+        }
     }
 }
 
@@ -188,8 +198,8 @@ function pressedRestart(){
     appleX = 425;
     appleY = 325;
     startingX = 200;
-    startingY = 330;
-    numSegments = 40;
+    startingY = 325;
+    numSegments = 20;
     direction = "right";
     snakeX = [];
     snakeY = [];
@@ -205,7 +215,7 @@ function updateSnake(){
     if(direction == "left"){
         snakeX[numSegments-1] = snakeX[numSegments-2] - speed;
         snakeY[numSegments-1] = snakeY[numSegments-2];
-        console.log('left', numSegments);
+        console.log('left',numSegments);
     }else if(direction == "right"){
         snakeX[numSegments-1] = snakeX[numSegments-2] + speed;
         snakeY[numSegments-1] = snakeY[numSegments-2];
